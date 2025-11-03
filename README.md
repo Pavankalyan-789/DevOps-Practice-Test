@@ -1,7 +1,7 @@
                   Backup Automation System
-
-     A modular and reliable backup automation framework built using Bash.
-     This wiki provides a complete explanation of the system, its architecture, usage, and extension points.
+            
+  A modular and reliable backup automation framework built using Bash.
+  This wiki provides a complete explanation of the system, its architecture, usage, and extension points.
 
    1. Overview
 
