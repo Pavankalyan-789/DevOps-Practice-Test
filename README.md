@@ -1,298 +1,168 @@
-# Bash Scripting Project: Automated Backup System
+                  Backup Automation System
+            
+  A modular and reliable backup automation framework built using Bash.
+  This wiki provides a complete explanation of the system, its architecture, usage, and extension points.
 
-## What You Will Build
+   1. Overview
 
-You will create a backup tool that automatically saves copies of important files and folders. Think of it like a smart "copy and paste" that remembers what it copied, checks if the copy is good, and deletes old copies to save space.
+         The Backup Automation System is designed to generate timestamped compressed backups with built-in integrity verification and comprehensive logging.
+         It works on any Unix-like environment and requires no external dependencies beyond standard Linux utilities.
 
----
+         The system is useful for:
 
-## What Your Script Must Do
-
-### Part 1: Create Backups (The Main Job)
+       DevOps practice
 
-Your script should:
+       Server maintenance
 
-1. **Take a folder as input** - The user tells your script which folder to backup
-   - Example: `./backup.sh /home/user/my_documents`
+       Automated scheduled backups
 
-2. **Create a compressed file** - Put all files into one `.tar.gz` file (like a ZIP file)
-   - Name it with date and time: `backup-2024-11-03-1430.tar.gz`
-   - This means: backup created on November 3rd, 2024 at 2:30 PM
+       Test environments
 
-3. **Save a "fingerprint" of the backup** - Create a checksum (a unique code that proves the file is not damaged)
-   - Use MD5 or SHA256
-   - Save it in a separate file: `backup-2024-11-03-1430.tar.gz.md5`
+       Training projects
 
-4. **Don't backup everything** - Skip unnecessary files like:
-   - `.git` folders (Git version control files)
-   - `node_modules` folders (JavaScript libraries)
-   - `.cache` folders (temporary files)
-   - Let users configure what to skip
+     2. System Architecture
 
----
+   The backup automation process includes the following components:
 
-### Part 2: Delete Old Backups (Keep Things Clean)
+     2.1 Backup Script
 
-Your script should automatically delete old backups to save disk space:
+     The main automation logic resides in backup.sh.
+     Its responsibilities include:
 
-**The Rules:**
-- Keep the last 7 daily backups (one from each of the last 7 days)
-- Keep the last 4 weekly backups (one from each of the last 4 weeks)
-- Keep the last 3 monthly backups (one from each of the last 3 months)
+     Validating input
 
-**Example:**
-```
-Today is November 3rd
-Daily backups: Nov 3, Nov 2, Nov 1, Oct 31, Oct 30, Oct 29, Oct 28
-Weekly backups: Oct 27, Oct 20, Oct 13, Oct 6
-Monthly backups: Oct 1, Sep 1, Aug 1
-```
+     Creating compressed archives
 
-**Delete any backups older than these!**
+     Generating SHA-256 checksums
 
----
+     Verifying backup integrity
 
-### Part 3: Check If Backups Are Good (Verification)
+     Logging operations
 
-After creating a backup:
-1. **Calculate the checksum again** and compare with the saved one
-2. **Try to extract a test file** from the backup to make sure it's not corrupted
-3. **Print "SUCCESS"** if everything is okay, or **"FAILED"** if something is wrong
+     Handling errors
 
----
+     2.2 Configuration File
 
-### Part 4: Make It Smart (Important Features)
+     backup.config allows customization of default settings.
+     Supported configuration values:
 
-#### A. Configuration File
-- Don't put settings inside the script code
-- Create a file called `backup.config` where users can set:
-  - Where to save backups
-  - Which folders to exclude
-  - How many backups to keep
-  - Email address for notifications (optional)
+     BACKUP_DIR="backups"
+     LOG_FILE="backup.log"
 
-**Example `backup.config`:**
-```bash
-BACKUP_DESTINATION=/home/backups
-EXCLUDE_PATTERNS=".git,node_modules,.cache"
-DAILY_KEEP=7
-WEEKLY_KEEP=4
-MONTHLY_KEEP=3
-```
+     2.3 Output Directory
 
-#### B. Logging
-- Save everything your script does to a log file: `backup.log`
-- Include:
-  - Date and time
-  - What action was performed
-  - If it succeeded or failed
-  - Any error messages
+      All generated files are stored inside the backups folder:
 
-**Example log:**
-```
-[2024-11-03 14:30:15] INFO: Starting backup of /home/user/documents
-[2024-11-03 14:30:45] SUCCESS: Backup created: backup-2024-11-03-1430.tar.gz
-[2024-11-03 14:30:46] INFO: Checksum verified successfully
-[2024-11-03 14:30:50] INFO: Deleted old backup: backup-2024-10-05-0900.tar.gz
-```
+      .tar.gz backup files
 
-#### C. Dry Run Mode
-- Let users test what the script will do WITHOUT actually doing it
-- Usage: `./backup.sh --dry-run /home/user/documents`
-- Print messages like: "Would backup folder X", "Would delete backup Y"
+       SHA-256 hash files
 
-#### D. Prevent Multiple Runs
-- What if someone runs the script twice at the same time?
-- Use a lock file to prevent this
-- Create a file like `/tmp/backup.lock` when script starts
-- Check if this file exists before running
-- Delete it when script finishes
+       Verification results
 
----
+       2.4 Logging
 
-## Extra Features (Bonus Points ⭐)
+       All operations are appended to backup.log with timestamps and severity levels.
 
-If you finish the main requirements, try these:
+      3. Directory Layout
+    Devops-Practice-Test/
+    │
+     ├── backup.sh
+     ├── backup.config
+     ├── backup.log
+     │
+     ├── backups/
+     │   ├── backup-YYYY-MM-DD-HHMM.tar.gz
+     │   └── backup-YYYY-MM-DD-HHMM.tar.gz.sha256
+     │
+     └── test_folder/
 
-1. **Restore Function** - Add option to restore from a backup
-   ```bash
-   ./backup.sh --restore backup-2024-11-03-1430.tar.gz --to /home/user/restored_files
-   ```
+     4 . How the System Works
+     Step 1: Validate Input
 
-2. **List Backups** - Show all available backups with their sizes and dates
-   ```bash
-   ./backup.sh --list
-   ```
+     The script checks whether the provided directory exists.
 
-3. **Space Check** - Before backing up, check if there's enough disk space
+     Step 2: Create Archive
 
-4. **Email Notifications** - Send an email when backup succeeds or fails (you can simulate this by writing to a file called `email.txt`)
+     The folder is compressed using tar into a .tar.gz format.
 
-5. **Incremental Backups** - Only backup files that changed since last backup (this is hard!)
+     Step 3: Generate Checksum
 
----
+       A SHA-256 checksum is created to verify the integrity of the backup.
 
-## Things You Must Handle (Error Cases)
+     Step 4: Validate Backup
 
-Your script should not crash! Handle these situations:
+     The script verifies the generated checksum through:
 
-1. **Folder doesn't exist** - Print error: "Error: Source folder not found"
-2. **No permission to read folder** - Print error: "Error: Cannot read folder, permission denied"
-3. **Not enough disk space** - Print error: "Error: Not enough disk space for backup"
-4. **Config file missing** - Use default values or print error
-5. **Backup destination doesn't exist** - Create it automatically
-6. **Script interrupted** - Clean up partial backup files
+      sha256sum -c file.sha256
 
----
+      Step 5: Logging
 
-## What to Submit
+      The script logs:
 
-### 1. Your Code
-```
-backup-system/
-├── backup.sh              ← Your main script
-├── backup.config          ← Configuration file
-└── README.md              ← Documentation (very important!)
-```
+      Start and end of backup
 
-### 2. README.md Must Include
+       Success messages
 
-Write in simple English:
 
-**A. Project Overview**
-- What does your script do?
-- Why is it useful?
+      Verification results
 
-**B. How to Use It**
-- Installation steps
-- Basic usage examples
-- All command options explained
+      5. Usage Guide
+      5.1 Make script executable
+      chmod +x backup.sh
 
-**C. How It Works**
-- Explain your rotation algorithm (how you decide which backups to delete)
-- Explain how you create checksums
-- Show your folder structure for backups
+      5.2 Run the Script
+      ./backup.sh <directory_path>
 
-**D. Design Decisions**
-- Why did you choose this approach?
-- What challenges did you face?
-- How did you solve them?
 
-**E. Testing**
-- How did you test your script?
-- Show example outputs
+      Example:
 
-**F. Known Limitations**
-- What doesn't work yet?
-- What could be improved?
+      ./backup.sh test_folder
 
-### 3. Examples You Must Show
+       5.3 Output Files
 
-Create a test folder with some files and demonstrate:
-- Creating a backup
-- Creating multiple backups over several "days" (you can fake the dates for testing)
-- Automatic deletion of old backups
-- Restoring from a backup (if you implemented this)
-- Dry run mode
-- Error handling (try to backup a folder that doesn't exist)
+        You will find inside backups/:
 
----
+        backup-2025-11-03-1027.tar.gz
 
-## How You Will Be Graded
+        backup-2025-11-03-1027.tar.gz.sha256
 
-| Category | Points | What We're Looking For |
-|----------|--------|------------------------|
-| Code Works Correctly | 30% | All main features work without errors |
-| Code Quality | 25% | Clean code, good function names, comments, organized |
-| Error Handling | 20% | Script doesn't crash, helpful error messages |
-| Documentation | 15% | Clear README, good examples, explains everything |
-| Configuration | 10% | Uses config file, not hardcoded values |
+        Logs will be added to backup.log.
 
-**Bonus points for extra features!**
+        6. Logging Details
 
----
+        Log format:
 
-## Hints to Get You Started
+       [YYYY-MM-DD HH:MM:SS] LEVEL: message
 
-### Step 1: Start Simple
-Don't try to do everything at once! Start with:
-```bash
-#!/bin/bash
-# Just create a basic backup first
-tar -czf backup-test.tar.gz /path/to/folder
-```
 
-### Step 2: Add Timestamp
-```bash
-TIMESTAMP=$(date +%Y-%m-%d-%H%M)
-tar -czf backup-$TIMESTAMP.tar.gz /path/to/folder
-```
+       Log levels:
 
-### Step 3: Add Functions
-Break your code into small functions:
-```bash
-create_backup() {
-    # code here
-}
+       INFO
 
-verify_backup() {
-    # code here
-}
+       SUCCESS
 
-delete_old_backups() {
-    # code here
-}
-```
+        Example log entries:
 
-### Step 4: Add Error Checking
-```bash
-if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: Directory does not exist"
-    exit 1
-fi
-```
+         [2025-11-03 10:30:11] INFO: Backup started
+         [2025-11-03 10:30:14] SUCCESS: Backup created successfully
+         [2025-11-03 10:30:15] SUCCESS: Backup verification passed
+!         [Image 2025-11-03 at 16 24 31_01dc1d0e](https://github.com/user-attachments/assets/220b4e9f-0c92-4ef7-939f-2f2adf33ed5a)
 
----
 
-## Useful Commands You'll Need
+         7. Verification Process
 
-- `tar -czf` - Create compressed archive
-- `tar -xzf` - Extract archive
-- `md5sum` or `sha256sum` - Create checksum
-- `find` - Find files
-- `date` - Get current date/time
-- `df -h` - Check disk space
-- `wc -l` - Count lines (useful for counting backups)
-- `sort` - Sort files by name/date
+        Checksum generation:
 
+        sha256sum backup.tar.gz > backup.tar.gz.sha256
 
 
+         Verification:
 
+          sha256sum -c backup.tar.gz.sha256
 
-## Final Tips
 
-✅ **Test frequently** - Don't write everything then test at the end  
-✅ **Use version control** - Commit to GitHub after each feature  
-✅ **Read error messages carefully** - They tell you what's wrong  
-✅ **Google is your friend** - Search for "bash how to..." when stuck  
-✅ **Ask questions** - But try to solve it yourself first  
-✅ **Write comments** - Explain what your code does  
-✅ **Keep it simple** - Simple working code is better than complex broken code  
+        summary:
 
----
+              A professional, robust, and automated backup system built using Bash scripting that securely compresses files, validates integrity with SHA-256 checksums, and                logs every action for full traceability.
 
-## Submission
-
-Push your code to GitHub and share the link
-
-Your repository should be well-organized and include:
-
-✅ Working `backup.sh` script  
-✅ Sample `backup.config` file  
-✅ Detailed `README.md`  
-✅ Example backup files (or screenshots)  
-✅ Sample log output  
-
----
-
-**Good luck! Remember: Start small, test often, and build incrementally. You've got this! 🚀**
+<img width="1068" height="214" alt="Screenshot 2025-11-03 180456" src="https://github.com/user-attachments/assets/5c9f4b26-6772-427e-b988-e42aa4ddb02f" />
