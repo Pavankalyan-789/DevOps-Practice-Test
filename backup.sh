@@ -1,8 +1,8 @@
 #!/bin/bash
 # =====================================================
 # Automated Backup System
-# Author: Yaswanth
-# Date: 2025-11-03
+# Author: pavan kalyan
+# Date: 2025-11-05
 # Description:
 #   Creates automated backups with verification, cleanup,
 #   configuration, logging, and dry-run support.
