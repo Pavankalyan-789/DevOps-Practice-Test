@@ -1,168 +1,135 @@
-                  Backup Automation System
-            
-  A modular and reliable backup automation framework built using Bash.
-  This wiki provides a complete explanation of the system, its architecture, usage, and extension points.
+       Automated Backup System
 
-   1. Overview
+   A fully automated, configuration-driven Backup & Recovery System built using Bash.
+   Designed with production-grade standards — featuring integrity validation, lifecycle management, checksum verification, restore workflows, dry-run mode, exclusion           patterns, and operational logging.
 
-         The Backup Automation System is designed to generate timestamped compressed backups with built-in integrity verification and comprehensive logging.
-         It works on any Unix-like environment and requires no external dependencies beyond standard Linux utilities.
+   This project demonstrates real-world DevOps engineering principles, including automation, reliability engineering, disaster recovery preparation, and backup rotation        strategy.
 
-         The system is useful for:
+   Highlights
 
-       DevOps practice
+  * Automated full-folder backup
 
-       Server maintenance
+  * SHA-256 checksum verification
 
-       Automated scheduled backups
+  * Corruption detection & archive integrity testing
 
-       Test environments
+  * Flexible configuration file (backup.config)
 
-       Training projects
+  * Backup retention policy (Daily | Weekly | Monthly)
 
-     2. System Architecture
+  * Exclude patterns for efficient backups
 
-   The backup automation process includes the following components:
+  * Dry-run mode for testing operations safely
 
-     2.1 Backup Script
+  * Safe lock mechanism to prevent duplicate processes
 
-     The main automation logic resides in backup.sh.
-     Its responsibilities include:
+  * Structured logging with timestamps
 
-     Validating input
+  * Simple & safe restore functionality
 
-     Creating compressed archives
+* Architecture Overview *
+  System Workflow
+  flowchart LR
+    A[Start Script] --> B[Load Configuration]
+    B --> C{Dry Run?}
+    C -->|Yes| D[Simulate Backup Process]
+    C -->|No| E[Acquire Lock]
+    E --> F[Check Disk Space]
+    F --> G[Create Tar Archive]
+    G --> H[Generate SHA-256 Checksum]
+    H --> I[Verify Checksum]
+    I --> J[Test Archive Integrity]
+    J --> K[Apply Retention Policy]
+    K --> L[Release Lock]
+    L --> M[Finish]
 
-     Generating SHA-256 checksums
+   Project Directory Structure
+Devops-Practice-Test/
+│
+├── backup.sh            # Core automation script
+├── backup.config        # Central configuration file
+├── backup.log           # Execution logs
+├── backups/             # All generated backup files
+└── test_folder/         # Sample backup source folder
 
-     Verifying backup integrity
+* Configuration (backup.config) *
 
-     Logging operations
+This file controls how the backup system behaves.
 
-     Handling errors
+BACKUP_DESTINATION=./backups
+EXCLUDE_PATTERNS=".git,node_modules,.cache"
+DAILY_KEEP=7
+WEEKLY_KEEP=4
+MONTHLY_KEEP=3
 
-     2.2 Configuration File
+* Explanation of Config Keys
+Key	Description
+BACKUP_DESTINATION	The directory where backup files will be stored
+EXCLUDE_PATTERNS	Comma-separated folder/file patterns to ignore
+DAILY_KEEP	Number of daily backups to retain
+WEEKLY_KEEP	Number of weekly backups to retain
+MONTHLY_KEEP	Number of monthly backups to retain
+* Usage Guide *
+ 1. Create a Backup
+./backup.sh <source_folder>
 
-     backup.config allows customization of default settings.
-     Supported configuration values:
 
-     BACKUP_DIR="backups"
-     LOG_FILE="backup.log"
+Example:
 
-     2.3 Output Directory
+./backup.sh test_folder
 
-      All generated files are stored inside the backups folder:
+ 2. List All Available Backups
+./backup.sh --list
 
-      .tar.gz backup files
+ 3. Restore a Backup
+./backup.sh --restore <backup_name.tar.gz> --to <restore_path>
 
-       SHA-256 hash files
 
-       Verification results
+Example:
 
-       2.4 Logging
+./backup.sh --restore backup-2025-11-05-1727.tar.gz --to ./restore_here
 
-       All operations are appended to backup.log with timestamps and severity levels.
+ 4. Dry-Run Mode (Safe Simulation)
+./backup.sh --dry-run test_folder
 
-      3. Directory Layout
-    Devops-Practice-Test/
-    │
-     ├── backup.sh
-     ├── backup.config
-     ├── backup.log
-     │
-     ├── backups/
-     │   ├── backup-YYYY-MM-DD-HHMM.tar.gz
-     │   └── backup-YYYY-MM-DD-HHMM.tar.gz.sha256
-     │
-     └── test_folder/
+ Internal Components Explained
+  1. Lock System
 
-     4 . How the System Works
-     Step 1: Validate Input
+Prevents multiple scripts from running simultaneously:
 
-     The script checks whether the provided directory exists.
+/tmp/backup.lock
 
-     Step 2: Create Archive
 
-     The folder is compressed using tar into a .tar.gz format.
+Ensures data consistency and avoids corrupt backups.
 
-     Step 3: Generate Checksum
+ 2. Backup Creation Process
 
-       A SHA-256 checksum is created to verify the integrity of the backup.
+Uses tar for compression
 
-     Step 4: Validate Backup
+Respects all exclude patterns
 
-     The script verifies the generated checksum through:
+Names backups using timestamp (YYYY-MM-DD-HHMM)
 
-      sha256sum -c file.sha256
+ 3. Data Integrity Checks
 
-      Step 5: Logging
+After creating a backup:
 
-      The script logs:
+A SHA-256 file <backup>.sha256 is generated
 
-      Start and end of backup
+Checksum is re-validated immediately
 
-       Success messages
+Archive is tested using tar -tzf
 
+If anything fails → backup is aborted safely.
 
-      Verification results
+ 4. Retention Policy (Lifecycle Management)
 
-      5. Usage Guide
-      5.1 Make script executable
-      chmod +x backup.sh
+Automatically removes old backups based on:
 
-      5.2 Run the Script
-      ./backup.sh <directory_path>
+✅ Daily
+✅ Weekly
+✅ Monthly
 
+This keeps storage clean and follows real-world DR best practices.
 
-      Example:
-
-      ./backup.sh test_folder
-
-       5.3 Output Files
-
-        You will find inside backups/:
-
-        backup-2025-11-03-1027.tar.gz
-
-        backup-2025-11-03-1027.tar.gz.sha256
-
-        Logs will be added to backup.log.
-
-        6. Logging Details
-
-        Log format:
-
-       [YYYY-MM-DD HH:MM:SS] LEVEL: message
-
-
-       Log levels:
-
-       INFO
-
-       SUCCESS
-
-        Example log entries:
-
-         [2025-11-03 10:30:11] INFO: Backup started
-         [2025-11-03 10:30:14] SUCCESS: Backup created successfully
-         [2025-11-03 10:30:15] SUCCESS: Backup verification passed
-!         [Image 2025-11-03 at 16 24 31_01dc1d0e](https://github.com/user-attachments/assets/220b4e9f-0c92-4ef7-939f-2f2adf33ed5a)
-
-
-         7. Verification Process
-
-        Checksum generation:
-
-        sha256sum backup.tar.gz > backup.tar.gz.sha256
-
-
-         Verification:
-
-          sha256sum -c backup.tar.gz.sha256
-
-
-        summary:
-
-              A professional, robust, and automated backup system built using Bash scripting that securely compresses files, validates integrity with SHA-256 checksums, and                logs every action for full traceability.
-
-<img width="1068" height="214" alt="Screenshot 2025-11-03 180456" src="https://github.com/user-attachments/assets/5c9f4b26-6772-427e-b988-e42aa4ddb02f" />
+📝 Sample Log Output
