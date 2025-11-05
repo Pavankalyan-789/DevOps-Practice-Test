@@ -17,7 +17,7 @@ LOCK_FILE="/tmp/backup.lock"
 if [ -f "$CONFIG_FILE" ]; then
     source "$CONFIG_FILE"
 else
-    echo "❌ Error: Config file not found at $CONFIG_FILE"
+    echo " Error: Config file not found at $CONFIG_FILE"
     exit 1
 fi
 
