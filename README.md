@@ -126,10 +126,10 @@ If anything fails → backup is aborted safely.
 
 Automatically removes old backups based on:
 
-✅ Daily
-✅ Weekly
-✅ Monthly
+* Daily
+* Weekly
+* Monthly
 
-This keeps storage clean and follows real-world DR best practices.
+This keeps storage clean and follows real-world DR best practice.
 
-📝 Sample Log Output
+* Sample Log Output
